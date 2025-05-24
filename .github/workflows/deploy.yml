@@ -1,0 +1,26 @@
+name: Deploy Proxy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Caddy
+        run: |
+          sudo apt update
+          sudo apt install -y debian-keyring debian-archive-keyring curl
+          curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-archive-keyring.gpg
+          curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+          sudo apt update
+          sudo apt install caddy -y
+
+      - name: Start Caddy Proxy
+        run: |
+          nohup caddy run --config Caddyfile --adapter caddyfile &
+          sleep 10
+          curl -I http://localhost:80
